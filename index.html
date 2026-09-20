@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <title>SecurePass — генератор паролей</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: rgba(255,255,255,.88);
+      --card-solid: #fff;
+      --text: #172033;
+      --muted: #6b7690;
+      --line: #e4e8f0;
+      --primary: #4f46e5;
+      --primary-2: #7c3aed;
+      --primary-soft: #eef2ff;
+      --success: #079669;
+      --warning: #d97706;
+      --danger: #dc3545;
+      --shadow: 0 20px 55px rgba(37, 45, 75, .10);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 10% 0%, #e9e7ff 0, transparent 32%), radial-gradient(circle at 100% 0%, #dff7f2 0, transparent 27%), var(--bg);
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 52px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 30px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-2)); box-shadow: 0 10px 24px rgba(79,70,229,.28); }
+    .brand-mark svg { width: 24px; height: 24px; }
+    .brand-name { font-weight: 800; letter-spacing: -.04em; font-size: 21px; }
+    .brand-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .language { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+    .language select { border: 1px solid var(--line); border-radius: 12px; padding: 9px 30px 9px 11px; color: var(--text); background: rgba(255,255,255,.75); outline: none; }
+    .hero { margin: 26px 0 22px; }
+    .hero h1 { font-size: clamp(30px, 5vw, 50px); line-height: 1.02; letter-spacing: -.055em; margin: 0 0 12px; max-width: 760px; }
+    .hero p { margin: 0; color: var(--muted); max-width: 700px; font-size: 16px; line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 20px; align-items: start; }
+    .card { background: var(--card); border: 1px solid rgba(255,255,255,.78); box-shadow: var(--shadow); border-radius: var(--radius); padding: 24px; backdrop-filter: blur(16px); }
+    .result-card { grid-column: 1 / -1; background: linear-gradient(135deg, #111a34, #202a55); color: white; overflow: hidden; position: relative; }
+    .result-card:after { content: ""; position: absolute; width: 280px; height: 280px; border: 1px solid rgba(255,255,255,.08); border-radius: 50%; right: -100px; top: -145px; box-shadow: 0 0 0 35px rgba(255,255,255,.025), 0 0 0 70px rgba(255,255,255,.018); pointer-events: none; }
+    .card-title { font-size: 17px; font-weight: 750; margin: 0 0 18px; letter-spacing: -.02em; }
+    .result-top { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; position: relative; z-index: 1; }
+    .eyebrow { color: #aeb9ff; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 800; }
+    .strength { display: flex; align-items: center; gap: 9px; margin-top: 8px; font-weight: 750; }
+    .strength-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 5px rgba(16,185,129,.15); }
+    .password-box { display: flex; gap: 10px; align-items: center; margin-top: 23px; position: relative; z-index: 1; }
+    .password-value { min-width: 0; flex: 1; padding: 18px; border: 1px solid rgba(255,255,255,.13); border-radius: 15px; background: rgba(3,7,18,.35); font-family: "SFMono-Regular", Consolas, monospace; font-size: clamp(16px, 2.5vw, 22px); letter-spacing: .045em; overflow-wrap: anywhere; line-height: 1.35; }
+    .icon-btn, .primary-btn { border: 0; color: #fff; border-radius: 13px; min-height: 50px; padding: 0 17px; font-weight: 750; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .16s, filter .16s; }
+    .icon-btn { background: rgba(255,255,255,.12); min-width: 50px; padding: 0 13px; }
+    .icon-btn:hover, .primary-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .primary-btn { background: linear-gradient(135deg, var(--primary), var(--primary-2)); box-shadow: 0 10px 22px rgba(79,70,229,.22); }
+    .primary-btn.full { width: 100%; margin-top: 22px; }
+    .meter { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-top: 20px; position: relative; z-index: 1; }
+    .meter span { height: 6px; border-radius: 10px; background: rgba(255,255,255,.16); }
+    .meter span.active { background: var(--success); }
+    .result-hint { color: #b9c2dd; font-size: 12px; margin: 10px 0 0; position: relative; z-index: 1; }
+    .setting { margin-bottom: 22px; }
+    .setting-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .setting-label { font-weight: 700; font-size: 14px; }
+    .number { font-weight: 800; color: var(--primary); background: var(--primary-soft); padding: 5px 9px; border-radius: 8px; font-size: 13px; }
+    input[type="range"] { appearance: none; width: 100%; height: 6px; border-radius: 10px; background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 27%, #e8eaf1 27%, #e8eaf1 100%); outline: none; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 5px solid var(--primary); box-shadow: 0 2px 8px rgba(79,70,229,.28); }
+    input[type="range"]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 5px solid var(--primary); }
+    .checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .check { display: flex; gap: 9px; align-items: center; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); font-size: 13px; cursor: pointer; transition: background .15s, border .15s; }
+    .check:hover { background: #fafaff; border-color: #c9c9fb; }
+    .check input { accent-color: var(--primary); width: 16px; height: 16px; margin: 0; }
+    .privacy { display: flex; gap: 9px; align-items: flex-start; color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 16px; }
+    .privacy svg { flex: 0 0 16px; margin-top: 1px; color: var(--success); }
+    .history-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .text-button { border: 0; background: transparent; color: var(--primary); font-size: 12px; font-weight: 700; padding: 6px; }
+    .history-list { display: grid; gap: 9px; max-height: 350px; overflow: auto; padding-right: 2px; }
+    .history-item { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 13px; padding: 11px; background: rgba(255,255,255,.7); }
+    .history-password { flex: 1; min-width: 0; font-family: monospace; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .history-meta { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .mini-copy { border: 0; background: var(--primary-soft); color: var(--primary); border-radius: 8px; padding: 7px 9px; font-size: 11px; font-weight: 750; }
+    .empty { text-align: center; color: var(--muted); padding: 28px 10px; font-size: 13px; border: 1px dashed var(--line); border-radius: 14px; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: #172033; color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.2); transition: .22s; z-index: 3; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    footer { color: var(--muted); text-align: center; font-size: 12px; margin-top: 28px; line-height: 1.6; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 760px) { .shell { width: min(100% - 22px, 620px); padding-top: 14px; } header { margin-bottom: 22px; } .brand-sub { display: none; } .grid { grid-template-columns: 1fr; } .result-card { grid-column: auto; } .card { padding: 18px; border-radius: 18px; } .result-top { display: block; } .result-top .eyebrow { margin-bottom: 10px; } .password-box { align-items: stretch; } .password-box .icon-btn { min-width: 52px; } .checks { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M12 14v3"/></svg></div>
+        <div><div class="brand-name">SecurePass</div><div class="brand-sub" data-i18n="brandSub">Безопасные пароли без лишнего</div></div>
+      </div>
+      <label class="language"><span data-i18n="language">Язык</span><select id="language" aria-label="Language"><option value="ru">Русский</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="pt">Português</option></select></label>
+    </header>
+
+    <section class="hero"><h1 data-i18n="title">Создайте пароль, который сложно взломать</h1><p data-i18n="subtitle">Генерация происходит прямо в браузере с помощью официального Web Crypto API. Пароли не отправляются в сеть.</p></section>
+
+    <section class="grid">
+      <article class="card result-card">
+        <div class="result-top"><div><div class="eyebrow" data-i18n="generated">Сгенерированный пароль</div><div class="strength"><span class="strength-dot" id="strengthDot"></span><span id="strengthText">Надёжный пароль</span></div></div></div>
+        <div class="password-box"><div class="password-value" id="passwordValue" aria-live="polite">—</div><button class="icon-btn" id="copyButton" type="button" data-i18n-aria="copyAria" aria-label="Скопировать пароль"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span data-i18n="copy">Копировать</span></button></div>
+        <div class="meter" id="meter" aria-label="Password strength"><span></span><span></span><span></span><span></span></div><p class="result-hint" id="strengthHint"></p>
+      </article>
+
+      <article class="card">
+        <h2 class="card-title" data-i18n="settings">Настройки</h2>
+        <div class="setting"><div class="setting-head"><span class="setting-label" data-i18n="length">Длина пароля</span><span class="number" id="lengthValue">20</span></div><input id="length" type="range" min="4" max="64" value="20"><div style="display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:7px"><span>4</span><span>64</span></div></div>
+        <div class="setting"><div class="setting-label" style="margin-bottom:12px" data-i18n="include">Включить символы</div><div class="checks">
+          <label class="check"><input id="lowercase" type="checkbox" checked><span data-i18n="lowercase">Строчные буквы (a–z)</span></label>
+          <label class="check"><input id="uppercase" type="checkbox" checked><span data-i18n="uppercase">Заглавные буквы (A–Z)</span></label>
+          <label class="check"><input id="numbers" type="checkbox" checked><span data-i18n="numbers">Цифры (0–9)</span></label>
+          <label class="check"><input id="symbols" type="checkbox" checked><span data-i18n="symbols">Символы (!@#$)</span></label>
+        </div></div>
+        <label class="check"><input id="avoidAmbiguous" type="checkbox" checked><span data-i18n="avoidAmbiguous">Исключать похожие символы</span></label>
+        <button class="primary-btn full" id="generateButton" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg><span data-i18n="generate">Сгенерировать пароль</span></button>
+        <div class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v5c0 5.1 3.4 8.9 8 10 4.6-1.1 8-4.9 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="privacy">Используется криптографически стойкий генератор Web Crypto API. Никаких запросов к серверу.</span></div>
+      </article>
+
+      <article class="card">
+        <div class="history-head"><h2 class="card-title" style="margin:0" data-i18n="history">История генерации</h2><button class="text-button" id="clearHistory" type="button" data-i18n="clear">Очистить</button></div>
+        <div class="history-list" id="historyList"></div>
+      </article>
+    </section>
+    <footer data-i18n="footer">SecurePass работает локально. История хранится только в памяти текущей вкладки и исчезает после её закрытия.</footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+    const I18N = {
+      ru: { brandSub:'Безопасные пароли без лишнего', language:'Язык', title:'Создайте пароль, который сложно взломать', subtitle:'Генерация происходит прямо в браузере с помощью официального Web Crypto API. Пароли не отправляются в сеть.', generated:'Сгенерированный пароль', copy:'Копировать', copyAria:'Скопировать пароль', settings:'Настройки', length:'Длина пароля', include:'Включить символы', lowercase:'Строчные буквы (a–z)', uppercase:'Заглавные буквы (A–Z)', numbers:'Цифры (0–9)', symbols:'Символы (!@#$)', avoidAmbiguous:'Исключать похожие символы', generate:'Сгенерировать пароль', privacy:'Используется криптографически стойкий генератор Web Crypto API. Никаких запросов к серверу.', history:'История генерации', clear:'Очистить', empty:'Здесь появятся последние пароли', copied:'Пароль скопирован', cleared:'История очищена', choose:'Выберите хотя бы один набор символов', veryWeak:'Очень слабый пароль', weak:'Слабый пароль', fair:'Средний пароль', good:'Хороший пароль', strong:'Надёжный пароль', hintWeak:'Увеличьте длину и добавьте разные типы символов.', hintFair:'Неплохое начало, но лучше сделать пароль длиннее.', hintGood:'Хороший вариант для большинства задач.', hintStrong:'Отличный уровень: длинный и разнообразный пароль.', footer:'SecurePass работает локально. История хранится только в памяти текущей вкладки и исчезает после её закрытия.', recent:'Недавно' },
+      en: { brandSub:'Secure passwords, nothing extra', language:'Language', title:'Create a password that is hard to crack', subtitle:'Generation happens in your browser using the official Web Crypto API. Passwords never leave your device.', generated:'Generated password', copy:'Copy', copyAria:'Copy password', settings:'Settings', length:'Password length', include:'Include characters', lowercase:'Lowercase letters (a–z)', uppercase:'Uppercase letters (A–Z)', numbers:'Numbers (0–9)', symbols:'Symbols (!@#$)', avoidAmbiguous:'Exclude look-alike characters', generate:'Generate password', privacy:'Uses the cryptographically secure Web Crypto API. No server requests.', history:'Generation history', clear:'Clear', empty:'Your latest passwords will appear here', copied:'Password copied', cleared:'History cleared', choose:'Select at least one character set', veryWeak:'Very weak password', weak:'Weak password', fair:'Medium password', good:'Good password', strong:'Strong password', hintWeak:'Increase the length and add different character types.', hintFair:'A decent start, but a longer password is better.', hintGood:'A good choice for most tasks.', hintStrong:'Excellent level: long and diverse.', footer:'SecurePass runs locally. History stays in this tab memory and disappears when the tab closes.', recent:'Recent' },
+      fr: { brandSub:'Des mots de passe sûrs, simplement', language:'Langue', title:'Créez un mot de passe difficile à pirater', subtitle:'La génération se fait dans votre navigateur avec la Web Crypto API officielle. Les mots de passe ne quittent jamais votre appareil.', generated:'Mot de passe généré', copy:'Copier', copyAria:'Copier le mot de passe', settings:'Paramètres', length:'Longueur du mot de passe', include:'Inclure les caractères', lowercase:'Minuscules (a–z)', uppercase:'Majuscules (A–Z)', numbers:'Chiffres (0–9)', symbols:'Symboles (!@#$)', avoidAmbiguous:'Exclure les caractères similaires', generate:'Générer un mot de passe', privacy:'Utilise la Web Crypto API sécurisée. Aucune requête serveur.', history:'Historique', clear:'Effacer', empty:'Vos derniers mots de passe apparaîtront ici', copied:'Mot de passe copié', cleared:'Historique effacé', choose:'Sélectionnez au moins un jeu de caractères', veryWeak:'Mot de passe très faible', weak:'Mot de passe faible', fair:'Mot de passe moyen', good:'Bon mot de passe', strong:'Mot de passe robuste', hintWeak:'Augmentez la longueur et ajoutez plusieurs types de caractères.', hintFair:'Un bon début, mais un mot de passe plus long est préférable.', hintGood:'Un bon choix pour la plupart des usages.', hintStrong:'Excellent niveau : long et varié.', footer:'SecurePass fonctionne localement. L’historique reste en mémoire dans cet onglet et disparaît à sa fermeture.', recent:'Récent' },
+      es: { brandSub:'Contraseñas seguras, sin complicaciones', language:'Idioma', title:'Crea una contraseña difícil de descifrar', subtitle:'La generación ocurre en tu navegador con la Web Crypto API oficial. Las contraseñas nunca salen de tu dispositivo.', generated:'Contraseña generada', copy:'Copiar', copyAria:'Copiar contraseña', settings:'Ajustes', length:'Longitud de la contraseña', include:'Incluir caracteres', lowercase:'Letras minúsculas (a–z)', uppercase:'Letras mayúsculas (A–Z)', numbers:'Números (0–9)', symbols:'Símbolos (!@#$)', avoidAmbiguous:'Excluir caracteres parecidos', generate:'Generar contraseña', privacy:'Usa la Web Crypto API criptográficamente segura. Sin solicitudes al servidor.', history:'Historial de generación', clear:'Borrar', empty:'Tus últimas contraseñas aparecerán aquí', copied:'Contraseña copiada', cleared:'Historial borrado', choose:'Selecciona al menos un conjunto de caracteres', veryWeak:'Contraseña muy débil', weak:'Contraseña débil', fair:'Contraseña media', good:'Buena contraseña', strong:'Contraseña segura', hintWeak:'Aumenta la longitud y añade distintos tipos de caracteres.', hintFair:'Un buen comienzo, pero es mejor hacerla más larga.', hintGood:'Una buena opción para la mayoría de los casos.', hintStrong:'Nivel excelente: larga y variada.', footer:'SecurePass funciona localmente. El historial permanece en la memoria de esta pestaña y desaparece al cerrarla.', recent:'Reciente' },
+      pt: { brandSub:'Palavras-passe seguras, sem complicação', language:'Idioma', title:'Crie uma palavra-passe difícil de quebrar', subtitle:'A geração acontece no seu navegador com a Web Crypto API oficial. As palavras-passe nunca saem do dispositivo.', generated:'Palavra-passe gerada', copy:'Copiar', copyAria:'Copiar palavra-passe', settings:'Definições', length:'Comprimento da palavra-passe', include:'Incluir caracteres', lowercase:'Letras minúsculas (a–z)', uppercase:'Letras maiúsculas (A–Z)', numbers:'Números (0–9)', symbols:'Símbolos (!@#$)', avoidAmbiguous:'Excluir caracteres parecidos', generate:'Gerar palavra-passe', privacy:'Usa a Web Crypto API criptograficamente segura. Sem pedidos ao servidor.', history:'Histórico de geração', clear:'Limpar', empty:'As suas palavras-passe recentes aparecerão aqui', copied:'Palavra-passe copiada', cleared:'Histórico limpo', choose:'Selecione pelo menos um conjunto de caracteres', veryWeak:'Palavra-passe muito fraca', weak:'Palavra-passe fraca', fair:'Palavra-passe média', good:'Boa palavra-passe', strong:'Palavra-passe segura', hintWeak:'Aumente o comprimento e adicione tipos diferentes de caracteres.', hintFair:'Um bom começo, mas uma palavra-passe mais longa é melhor.', hintGood:'Uma boa escolha para a maioria das situações.', hintStrong:'Nível excelente: longa e variada.', footer:'O SecurePass funciona localmente. O histórico fica na memória deste separador e desaparece quando ele é fechado.', recent:'Recente' }
+    };
+    const $ = id => document.getElementById(id);
+    let lang = 'ru';
+    let currentPassword = '';
+    let currentStrengthContext = { typeCount: 0, poolSize: 0 };
+    let history = [];
+    const sets = { lowercase: 'abcdefghijklmnopqrstuvwxyz', uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', numbers: '0123456789', symbols: '!@#$%^&*()-_=+[]{}:,.?/' };
+    const ambiguous = 'O0oIl1|`\"\'';
+
+    function t(key) { return I18N[lang][key] || I18N.ru[key] || key; }
+    function secureRandomInt(max) {
+      if (!Number.isInteger(max) || max <= 0) throw new Error('Invalid range');
+      const maxUint = 0x100000000;
+      const limit = maxUint - (maxUint % max);
+      const buf = new Uint32Array(1);
+      do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+      return buf[0] % max;
+    }
+    function removeAmbiguous(text) { return [...text].filter(ch => !ambiguous.includes(ch)).join(''); }
+    function randomChar(text) { return text[secureRandomInt(text.length)]; }
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) { const j = secureRandomInt(i + 1); [array[i], array[j]] = [array[j], array[i]]; }
+      return array;
+    }
+    function selectedPools() {
+      const pools = Object.entries(sets).filter(([id]) => $(id).checked).map(([, chars]) => $("avoidAmbiguous").checked ? removeAmbiguous(chars) : chars).filter(Boolean);
+      return pools;
+    }
+    function generate() {
+      const length = Number($("length").value);
+      const pools = selectedPools();
+      if (!pools.length) { showToast(t('choose')); return; }
+
+      const all = pools.join('');
+      currentStrengthContext = {
+        typeCount: pools.length,
+        poolSize: [...new Set(all)].length
+      };
+
+      // Сначала берём минимум по одному символу из каждого выбранного типа.
+      // Поэтому выбранные категории действительно присутствуют в пароле.
+      const chars = pools.map(randomChar);
+      while (chars.length < length) chars.push(randomChar(all));
+      currentPassword = shuffle(chars).join('');
+      $("passwordValue").textContent = currentPassword;
+      updateStrength();
+      history.unshift({ password: currentPassword, length, time: Date.now() });
+      history = history.slice(0, 10);
+      renderHistory();
+    }
+
+    function getPasswordStrength(length, typeCount, poolSize) {
+      if (length < 8 || typeCount === 0 || poolSize === 0) return 0;
+
+      // Энтропия учитывает и длину, и реальную мощность выбранного алфавита.
+      const entropy = length * Math.log2(poolSize);
+      let level = entropy < 36 ? 0 : entropy < 60 ? 1 : entropy < 80 ? 2 : 3;
+
+      // Короткий пароль без всех четырёх типов считаем очень слабым.
+      if (length <= 11) return typeCount === 4 ? Math.min(level, 1) : 0;
+
+      // Ограничения не позволяют длинной последовательности одного типа
+      // получить завышенную оценку только за счёт длины.
+      if (typeCount === 1) level = Math.min(level, 1);
+      else if (typeCount === 2) level = Math.min(level, 2);
+      else if (typeCount === 3 && length < 20) level = Math.min(level, 2);
+
+      // До 16 символов статус «Надёжный» не выдаётся.
+      if (length < 16) level = Math.min(level, 2);
+      return level;
+    }
+
+    function strengthInfo(password) {
+      const level = getPasswordStrength(
+        password.length,
+        currentStrengthContext.typeCount,
+        currentStrengthContext.poolSize
+      );
+      const names = ['veryWeak', 'weak', 'fair', 'strong'];
+      const hints = ['hintWeak', 'hintWeak', 'hintFair', 'hintStrong'];
+      return { level, name: t(names[level]), hint: t(hints[level]) };
+    }
+    function updateStrength() {
+      const info = strengthInfo(currentPassword);
+      $("strengthText").textContent = info.name;
+      $("strengthHint").textContent = info.hint;
+      $("strengthDot").style.background = ['#dc3545','#d97706','#0891b2','#10b981'][info.level];
+      $("strengthDot").style.boxShadow = `0 0 0 5px ${['rgba(220,53,69,.15)','rgba(217,119,6,.15)','rgba(8,145,178,.15)','rgba(16,185,129,.15)'][info.level]}`;
+      document.querySelectorAll('#meter span').forEach((el, i) => el.classList.toggle('active', i <= info.level));
+    }
+    function formatTime(time) { const d = new Date(time); return d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }); }
+    function renderHistory() {
+      const list = $("historyList"); list.innerHTML = '';
+      if (!history.length) { list.innerHTML = `<div class="empty">${t('empty')}</div>`; return; }
+      history.forEach(item => {
+        const row = document.createElement('div'); row.className = 'history-item';
+        const pass = document.createElement('div'); pass.className = 'history-password'; pass.textContent = item.password; pass.title = item.password;
+        const meta = document.createElement('div'); meta.className = 'history-meta'; meta.textContent = `${item.length} · ${formatTime(item.time)}`;
+        const btn = document.createElement('button'); btn.className = 'mini-copy'; btn.type = 'button'; btn.textContent = t('copy'); btn.addEventListener('click', () => copyPassword(item.password));
+        row.append(pass, meta, btn); list.appendChild(row);
+      });
+    }
+    async function copyPassword(value = currentPassword) {
+      if (!value || value === '—') return;
+      try { await navigator.clipboard.writeText(value); showToast(t('copied')); }
+      catch { showToast(value); }
+    }
+    let toastTimer;
+    function showToast(message) { const toast = $("toast"); toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2200); }
+    function updateLanguage() {
+      lang = $("language").value; document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+      document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
+      updateStrength(); renderHistory();
+    }
+    function updateRange() {
+      const value = Number($("length").value); $("lengthValue").textContent = value;
+      const percent = ((value - 4) / 60) * 100; $("length").style.background = `linear-gradient(90deg, var(--primary) 0%, var(--primary) ${percent}%, #e8eaf1 ${percent}%, #e8eaf1 100%)`;
+    }
+    $("generateButton").addEventListener('click', generate);
+    $("copyButton").addEventListener('click', () => copyPassword());
+    $("clearHistory").addEventListener('click', () => { history = []; renderHistory(); showToast(t('cleared')); });
+    $("language").addEventListener('change', updateLanguage);
+    $("length").addEventListener('input', updateRange);
+    updateRange();
+    generate();
+  </script>
+</body>
+</html>

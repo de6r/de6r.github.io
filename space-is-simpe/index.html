@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Space is simple</title>
+<meta name="description" content="Space is simple — интерактивная 3D-модель Солнечной системы">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<!-- Логотип: SVG-композиция планет на орбитах -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="sis-logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="31" fill="#10254a"/>
+    <ellipse cx="32" cy="32" rx="26" ry="10" fill="none" stroke="#e0b458" stroke-opacity=".6" stroke-width="1.2" transform="rotate(-20 32 32)"/>
+    <ellipse cx="32" cy="32" rx="17" ry="6.5" fill="none" stroke="#f5f7fb" stroke-opacity=".45" stroke-width="1" transform="rotate(-20 32 32)"/>
+    <circle cx="32" cy="32" r="9" fill="#e0b458" opacity=".18"/>
+    <circle cx="32" cy="32" r="6" fill="#e0b458"/>
+    <circle cx="48" cy="26.2" r="2.4" fill="#f5f7fb"/>
+    <circle cx="8" cy="40.6" r="3.2" fill="#3b7dd8"/>
+    <circle cx="27" cy="44" r="1.7" fill="#c1440e"/>
+    <circle cx="44" cy="17.5" r="1.3" fill="#e0b458" opacity=".8"/>
+  </symbol>
+</svg>
+<!-- Loading -->
+<div id="loading" class="loading">
+  <svg class="loading__logo"><use href="#sis-logo"/></svg>
+  <div class="loading__title">Space is simple</div>
+  <div class="loading__bar"><span id="loadingBar"></span></div>
+  <div class="loading__text" data-i18n="loading">Строим Солнечную систему…</div>
+</div>
+<header class="header">
+  <a class="brand" href="#" id="brand" aria-label="Space is simple">
+    <svg class="brand__logo"><use href="#sis-logo"/></svg>
+    <span class="brand__name">Space is simple</span>
+  </a>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" data-tab="scene" data-i18n="tab_scene">3D-сцена</button>
+    <button class="tab" data-tab="news" data-i18n="tab_news">Новости</button>
+  </nav>
+  <div class="search" id="search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="searchInput" type="text" autocomplete="off" spellcheck="false" data-i18n-placeholder="search_placeholder" placeholder="Найти объект…">
+    <ul class="search__list" id="searchList" role="listbox"></ul>
+  </div>
+  <div class="header__actions">
+    <button class="lang" id="langBtn" aria-label="Language">
+      <span data-lang="ru" class="is-active">RU</span><em>/</em><span data-lang="en">EN</span>
+    </button>
+    <a class="support" href="https://t.me/Nirkx" target="_blank" rel="noopener noreferrer" data-i18n="support">Поддержка</a>
+  </div>
+</header>
+<main class="main">
+  <!-- Сцена -->
+  <section id="view-scene" class="view is-active">
+    <div id="canvasHost" class="canvas-host"></div>
+    <div id="fallback" class="fallback hidden">
+      <svg class="fallback__logo"><use href="#sis-logo"/></svg>
+      <h2 data-i18n="fallback_title"></h2>
+      <p data-i18n="fallback_text"></p>
+      <div class="fallback__list" id="fallbackList"></div>
+    </div>
+    <div class="hud" id="hud">
+      <button class="hud__btn" id="camBtn">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/></svg>
+        <span id="camLabel"></span>
+      </button>
+      <button class="hud__btn hud__btn--icon" id="homeBtn">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10H3z"/><path d="M9 21v-6h6v6"/></svg>
+      </button>
+      <span class="hud__hint" id="hint"></span>
+    </div>
+    <div class="wasd" id="wasd">
+      <button data-key="KeyW">W</button>
+      <div>
+        <button data-key="KeyA">A</button>
+        <button data-key="KeyS">S</button>
+        <button data-key="KeyD">D</button>
+      </div>
+    </div>
+    <aside class="panel" id="panel">
+      <div class="panel__handle" id="panelHandle"></div>
+      <button class="panel__close" id="panelClose" aria-label="Close">×</button>
+      <div class="panel__head">
+        <span class="panel__type"><i class="panel__dot" id="pDot"></i><span id="pType"></span></span>
+        <h2 id="pName"></h2>
+      </div>
+      <p id="pDesc"></p>
+      <dl class="panel__stats">
+        <div><dt data-i18n="mass"></dt><dd id="pMass"></dd></div>
+        <div><dt data-i18n="radius"></dt><dd id="pRadius"></dd></div>
+        <div><dt data-i18n="temperature"></dt><dd id="pTemp"></dd></div>
+        <div><dt data-i18n="distance"></dt><dd id="pDist"></dd></div>
+      </dl>
+      <h3 data-i18n="formula"></h3>
+      <div class="formula" id="pFormula"></div>
+      <p id="pFormulaText"></p>
+      <h3 data-i18n="discovered"></h3>
+      <p id="pDiscovered"></p>
+      <h3 data-i18n="why"></h3>
+      <p id="pWhy"></p>
+    </aside>
+  </section>
+  <!-- Новости -->
+  <section id="view-news" class="view">
+    <div class="news">
+      <h1 data-i18n="news_title"></h1>
+      <p data-i18n="news_sub"></p>
+      <div class="news__grid" id="newsGrid"></div>
+    </div>
+  </section>
+</main>
+<footer class="footer">
+  <span>Space is simple</span>
+  <span data-i18n="footer"></span>
+</footer>
+<script type="module" src="script.js"></script>
+</body>
+</html>
